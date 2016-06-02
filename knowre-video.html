@@ -1,0 +1,27 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<dom-module id="knowre-video">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <h2>Hello [[prop1]]</h2>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'knowre-video',
+
+      properties: {
+        prop1: {
+          type: String,
+          value: 'knowre-video',
+        },
+      },
+
+    });
+  </script>
+</dom-module>
