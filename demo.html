@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base href="http://polygit.org/polymer+:master/components/">
+
+<script src="webcomponentsjs/webcomponents-lite.min.js"></script>
+<link href="polymer/polymer.html" rel="import">
+<link rel="import" href="paper-slider/paper-slider.html">
+<link rel="import" href="paper-button/paper-button.html">
+<style>
+  #log {
+    height: 200px;
+    width: 200px;
+    overflow-y: scroll;
+    outline: 1px solid silver;
+  }
+
+  #log.blink {
+    animation: blink 1s;
+  }
+
+  @keyframes blink {
+    0% {
+      background-color: gold;
+    }
+    100% {
+      background-color: white;
+    }
+  }
+
+  #video-nav {
+    display: inline-block;
+    }
+</style>
+</head>
+<body>
+  <video src="http://craftymind.com/factory/html5video/BigBuckBunny_640x360.mp4#t=00:00:10"></video>
+  <div>
+    <paper-button id="play" raised>play</paper-button>
+    <paper-button id="pause" raised>pause</paper-button>
+    <paper-button id="current-time-button" raised>current time</paper-button>
+    <paper-button id="request-full-screen" raised>full screen</paper-button>
+  </div>
+  <label>
+    play speed
+    <paper-slider id="rate-slider" min="0.5" max="2" step="0.1" value="1"></paper-slider>
+  </label>
+  <label>
+    navigation
+    <div>
+      <span id="current-time-display"></span>
+      /
+      <span id="duration-display"></span>
+      <paper-slider id="video-nav" min="0" step="0.2"></paper-slider>
+    </div>
+  </label>
+
+  <p id="progress"></p>
+  <p id="log"></p>
+  <script>
+  window.addEventListener('WebComponentsReady', function() {
+    var video = document.querySelector('video');
+    var play = document.querySelector('#play');
+    var pause = document.querySelector('#pause');
+    var rateSlider = document.querySelector('#rate-slider');
+    var logbox = document.querySelector('#log');
+    var currentTimeButton = document.querySelector('#current-time-button');
+    var videoNav = document.querySelector('#video-nav');
+    var requestFullScreenButton = document.querySelector('#request-full-screen');
+    var currentTimeDisplay = document.querySelector('#current-time-display');
+    var durationDisplay = document.querySelector('#duration-display');
+    function log(text) {
+      var p = document.createElement('p');
+      p.textContent = text;
+      logbox.appendChild(p);
+      logbox.scrollTop = logbox.scrollHeight;
+      logbox.classList.remove('blink');
+      logbox.offsetWidth = logbox.offsetWidth // reflow! https://css-tricks.com/restart-css-animation/
+      logbox.classList.add('blink');
+    }
+    play.addEventListener('click', function(e) {
+      video.play();
+      log('play');
+    });
+    pause.addEventListener('click', function(e) {
+      video.pause();
+      log('pause')
+    });
+
+    function rateChangeHandler(e) {
+      var value = e.currentTarget.immediateValue;
+      video.playbackRate = value;
+      log('playback rate: ' + value);
+    }
+
+    rateSlider.addEventListener('immediate-value-change', rateChangeHandler);
+    rateSlider.addEventListener('change', rateChangeHandler);
+    video.addEventListener('progress', function(e) {
+      log('progress');
+    })
+    video.addEventListener('canplaythrough', function(e) {
+      log('canplaythrough');
+    })
+    currentTimeButton.addEventListener('click', function(e) {
+      log('currentTime: ' + video.currentTime);
+    })
+    requestFullScreenButton.addEventListener('click', function(e) {
+      if (video.requestFullscreen) {
+        video.requestFullscreen();
+      } else if (video.msRequestFullscreen) {
+        video.msRequestFullscreen();
+      } else if (video.mozRequestFullScreen) {
+        video.mozRequestFullScreen();
+      } else if (video.webkitRequestFullscreen) {
+        video.webkitRequestFullscreen();
+      }
+    })
+
+    // sync between video and navigation
+    function setVideoNav(navEl, videoEl) {
+      navEl.max = videoEl.duration;
+      durationDisplay.textContent = Math.floor(videoEl.duration);
+      setInterval(function() {
+        navEl.value = videoEl.currentTime;
+        currentTimeDisplay.textContent = Math.floor(videoEl.currentTime);
+      }, 100); // optimization needed; when video in pause
+    }
+    if (video.readyState > 0) {
+      log('metadata ready');
+      setVideoNav(videoNav, video);
+    } else {
+      video.addEventListener('loadedmetadata', function(e) {
+        log('loadedmetadata');
+        setVideoNav(videoNav, video);
+      })
+    }
+
+    function videoNavChangeHandler(e) {
+      var value = e.currentTarget.immediateValue;
+      video.currentTime = value;
+      log('video nav: ' + value);
+    }
+
+    videoNav.addEventListener('immediate-value-change', videoNavChangeHandler);
+    videoNav.addEventListener('change', videoNavChangeHandler);
+  });
+  </script>
+</body></html>
